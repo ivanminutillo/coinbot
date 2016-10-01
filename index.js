@@ -1,28 +1,21 @@
 'use strict'
+var TelegramBot = require('node-telegram-bot-api');
 
-const Telegram = require('telegram-node-bot')
-const TelegramBaseController = Telegram.TelegramBaseController
-const TextCommand = Telegram.TextCommand
-const tg = new Telegram.Telegram('279000152:AAFb5pq0V9e2eZM0TmWq1tcxjMtCL1iMCuQ')
+var token = '279000152:AAFb5pq0V9e2eZM0TmWq1tcxjMtCL1iMCuQ';
+// Setup polling way
+var bot = new TelegramBot(token, {polling: true});
 
-console.log('ciaone')
-class PingController extends TelegramBaseController {
-  /**
-  * @param Scope $
-  */
-  pingHandler($) {
-    $.sendMessage('pong')
-  }
+// Matches /echo [whatever]
+bot.onText(/\/echo (.+)/, function (msg, match) {
+  var fromId = msg.from.id;
+  var resp = match[1];
+  bot.sendMessage(fromId, resp);
+});
 
-  get routes() {
-    return {
-      'pingCommand' : 'pingHandler'
-    }
-  }
-}
-
-tg.router
-  .when(
-    new TextCommand('ping', 'pingCommand'),
-    new PingController()
-  )
+// Any kind of message
+bot.on('message', function (msg) {
+  var chatId = msg.chat.id;
+  // photo can be: a file path, a stream or a Telegram file_id
+  var photo = 'cats.png';
+  bot.sendPhoto(chatId, photo, {caption: 'Lovely kittens'});
+});

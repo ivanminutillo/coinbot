@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/ivanminutillo/coinbot#readme",
   "dependencies": {
+    "node-telegram-bot-api": "0.23.3",
     "telegram-node-bot": "4.0.0"
   }
 }
