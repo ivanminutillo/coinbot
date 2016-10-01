@@ -1,0 +1,22 @@
+{
+  "name": "coinbot",
+  "version": "1.0.0",
+  "description": "a telegram bot to interact with criptocurrency",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ivanminutillo/coinbot.git"
+  },
+  "author": "ivanminutillo <bernini@inventati.org>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ivanminutillo/coinbot/issues"
+  },
+  "homepage": "https://github.com/ivanminutillo/coinbot#readme",
+  "dependencies": {
+    "telegram-node-bot": "4.0.0"
+  }
+}
