@@ -14,13 +14,6 @@ var bot = new Bot(token, { polling: true });
 console.log('bot server started...');
 var wall = btc.Wallet.fromSeedHex('ffffffffffffffffffffffffffffffff', bitcoin.networks.testnet);
 
-/**
-* CREATE A NEW ADDRESS
-*
-**/
-bot.onText(/^\/create/, function(msg) {
-  //find in db if the sender already have an associated node
-  //if not lets create a new one
 function assignIdentity(msg, wallet) {
     async.waterfall([
       function(callback) {
@@ -35,7 +28,8 @@ function assignIdentity(msg, wallet) {
           var newuser = {
             user : msg.chat.username,
             depth : hdnode.depth,
-            index: hdnode.index
+            index: hdnode.index,
+            address : hdnode.keyPair.getAddress()
 
           }
           callback(null, newuser)
@@ -56,7 +50,7 @@ function assignIdentity(msg, wallet) {
                 // reply sent!
               });
           } else {
-              bot.sendMessage(msg.chat.id, 'ora puoi scambiarti denara !').then(function () {
+              bot.sendMessage(msg.chat.id, 'hey ora hai tutto quello che ti serve per scambiarti denara !').then(function () {
                 // reply sent!
               });
               console.log('yuppi')
@@ -70,37 +64,45 @@ function assignIdentity(msg, wallet) {
     })
 }
 
-assignIdentity(msg, wall)
+function getAddress(msg) {
+  async.waterfall([
+    function(callback) {
+      db.find({user: msg.chat.username}, function (err, docs) {
+        callback(null, docs)
+      })
+    },
+    function(docs, callback) {
+      if(docs.length === 0) {
+        bot.sendMessage(msg.chat.id, 'Non hai un wallet amico, creane uno prima!')
+    } else {
+      console.log(docs)
+      console.log(docs[0].address)
+      bot.sendMessage(msg.chat.id, 'ecco il tuo indirizzo ' + docs[0].address ).then(function () {
+    })};
+    },
+  ], function() {
+    console.log('end')
+  })
+}
 
 
-  // var message = '';
-  // console.log('qui entra 1')
-  // db.find({ user: msg.chat.username }, function (err, docs) {
-  //   console.log('qui entra 2')
-  //   console.log(docs)
-  //   if(docs.length === 0) {
-  //     console.log('qui entra 3')
-  //     var newuser = {
-  //       user : msg.chat.username,
-  //       node : 'wall.external.derive(2)'
-  //     }
-  //     db.insert(newuser, function (err, newDoc) {
-  //       if(err) {
-  //         console.log(err)
-  //       } else {
-  //         console.log('yuppi')
-  //         console.log(newDoc)
-  //       }
-  //     });
-  //     message = msg.chat.username + ' your address is ' + wall.external.derive(2)
-  //   } else {
-  //     console.log('qui entra 4')
-  //     message = 'you already have an address'
-  //   }
-  // });
-  // console.log('il messaggio')
-  // console.log(message)
 
+
+/**
+* CREATE A NEW ADDRESS
+*
+**/
+bot.onText(/^\/create/, function(msg) {
+  assignIdentity(msg, wall)
+})
+
+
+/**
+* RETURN THE ADDRESS
+*
+**/
+bot.onText(/^\/address/, function(msg) {
+  getAddress(msg)
 })
 
 
