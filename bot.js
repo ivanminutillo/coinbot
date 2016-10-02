@@ -5,6 +5,7 @@ var bip32utils = require('bip32-utils')
 var bs58check = require('bs58check')
 var btc = require('./wallet')
 var async = require('async')
+var axios = require('axios')
 var Datastore = require('nedb')
 var db = new Datastore({ filename: './db/main.db', autoload: true })
 // You can issue commands right away
@@ -12,8 +13,10 @@ var db = new Datastore({ filename: './db/main.db', autoload: true })
 var bot = new Bot(token, { polling: true });
 
 console.log('bot server started...');
-var wall = btc.Wallet.fromSeedHex('ffffffffffffffffffffffffffffffff', bitcoin.networks.testnet);
 
+
+var wall = btc.Wallet.fromSeedHex('ffffffffffffffffffffffffffffffff', bitcoin.networks.testnet);
+console.log(wall.external.getAddress())
 function assignIdentity(msg, wallet) {
     async.waterfall([
       function(callback) {
@@ -22,17 +25,18 @@ function assignIdentity(msg, wallet) {
         })
       },
       function(docs, callback) {
-        console.log(docs)
         if(docs.length === 0) {
-          var hdnode = wallet.external.derive(2);
-          var newuser = {
-            user : msg.chat.username,
-            depth : hdnode.depth,
-            index: hdnode.index,
-            address : hdnode.keyPair.getAddress()
-
-          }
-          callback(null, newuser)
+          db.count({}, function (err, count) {
+            var hdnode = wallet.external.derive(count);
+            var newuser = {
+              _id: count,
+              user : msg.chat.username,
+              depth : hdnode.depth,
+              index: hdnode.index,
+              address : hdnode.keyPair.getAddress()
+            }
+            callback(null, newuser)
+          })
         } else {
           bot.sendMessage(msg.chat.id, 'Hai già un indirizzo, usa quello barbone !').then(function () {
             // reply sent!
@@ -40,12 +44,8 @@ function assignIdentity(msg, wallet) {
         }
       },
       function(newuser, callback) {
-        console.log(newuser)
-
         db.insert(newuser, function (err, newDoc) {
-          console.log(newDoc)
           if(err) {
-              console.log(err)
               bot.sendMessage(msg.chat.id, 'mi spiace amico ci è stato un errore !').then(function () {
                 // reply sent!
               });
@@ -53,8 +53,6 @@ function assignIdentity(msg, wallet) {
               bot.sendMessage(msg.chat.id, 'hey ora hai tutto quello che ti serve per scambiarti denara !').then(function () {
                 // reply sent!
               });
-              console.log('yuppi')
-              console.log(newDoc)
           }
         })
 
@@ -75,8 +73,6 @@ function getAddress(msg) {
       if(docs.length === 0) {
         bot.sendMessage(msg.chat.id, 'Non hai un wallet amico, creane uno prima!')
     } else {
-      console.log(docs)
-      console.log(docs[0].address)
       bot.sendMessage(msg.chat.id, 'ecco il tuo indirizzo ' + docs[0].address ).then(function () {
     })};
     },
@@ -85,6 +81,53 @@ function getAddress(msg) {
   })
 }
 
+
+
+function createTransaction (utxo, output, amount) {
+  var network = bitcoin.networks.testnet
+  var fee = 1500;
+  var remainder = utxo.satoshis - amount - fee
+  var txb = new bitcoin.TransactionBuilder(network)
+  txb.addInput(utxo.txid, utxo.vout);
+  txb.addOutput(output, Number(amount));
+  txb.addOutput(utxo.address, remainder)
+  txb.sign(0, wall.external.keyPair)
+  var tx = txb.build().toHex()
+  console.log(tx)
+  return tx
+}
+
+
+function receiveTokens(msg, amount) {
+  async.waterfall([
+    function(callback) {
+      db.find({ user: msg.chat.username }, function (err, docs) {
+        callback(null, docs)
+      })
+    },
+    function(docs, callback) {
+      console.log(docs)
+      axios.get('http://appliance2.uniquid.co:8080/insight-api/addr/mpQ6dh1hgYrBVhGgWdRSLezWEGt9unkhTg/utxo')
+        .then(function (res) {
+          console.log(docs[0].address);
+          createTransaction(res.data[0], docs[0].address, 10000)
+        })
+        .catch(function (error) {
+          console.log(error);
+      });
+    }
+  ])
+
+
+  //btc.Wallet.createTransaction()
+}
+/**
+* RECEIVE TOKENS
+*
+**/
+bot.onText(/^\/receive/, function(msg) {
+  receiveTokens(msg, 100)
+})
 
 
 

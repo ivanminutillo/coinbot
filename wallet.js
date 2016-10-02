@@ -28,14 +28,31 @@ function deriveAccount(master, accountIndex) {
     return node;
 }
 
+
+/**
+* Function to create a transaction
+* @param utxos: the list of utxos to insert in the transaction
+* @param machine: the machine address
+* @param user: the user address
+* @param profileOpReturn: the profile status of the user
+* @param wantedFee: the amount of satoshis tokens to give to miners
+* @param tokenAmount: the amount of satoshis tokens to send to machine
+* @param node
+* @return new unfirmed transaction
+**/
+
+
+
+
+
 Wallet.fromSeedBuffer = function (seed, network) {
   network = network || NETWORKS.bitcoin
   // HD first-level child derivation method should be hardened
   // See https://bitcointalk.org/index.php?topic=405179.msg4415254#msg4415254
   var m = bitcoin.HDNode.fromSeedBuffer(seed, network)
   var standardWallet = deriveAccount(m, 0)
-  var external = standardWallet.derive(0).neutered()
-  var internal = standardWallet.derive(1).neutered()
+  var external = standardWallet.derive(0)
+  var internal = standardWallet.derive(1)
   return new Wallet(external, internal)
 }
 

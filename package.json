@@ -18,6 +18,7 @@
   "homepage": "https://github.com/ivanminutillo/coinbot#readme",
   "dependencies": {
     "async": "2.0.1",
+    "axios": "0.14.0",
     "bip32-utils": "0.8.1",
     "bitcoinjs-lib": "2.3.0",
     "bs58check": "1.0.8",
